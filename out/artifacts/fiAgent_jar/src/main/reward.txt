@@ -1,0 +1,59 @@
+<EFTResponse>
+  <ResponseType>0003</ResponseType>
+  <MerchantRef>170120250503081154</MerchantRef>
+  <Status>0</Status>
+  <ResponseCode>-22</ResponseCode>
+  <AuthCode>111111</AuthCode>
+  <InvoiceNumber>111111</InvoiceNumber>
+  <TerminalID>95024685</TerminalID>
+  <MerchantID>000001070053864</MerchantID>
+  <CardNumber>111111******1111</CardNumber>
+  <ExpiryDate>1111</ExpiryDate>
+  <RRN>111111</RRN>
+  <TransactionType>Purchase</TransactionType>
+  <BaseCurrency>HKD</BaseCurrency>
+  <BaseAmount>100</BaseAmount>
+  <DCCCurrency>HKD</DCCCurrency>
+  <DCCAmount>100</DCCAmount>
+  <CardType>OTHER</CardType>
+  <MerchantReceipt>
+    DATE: 250503              TIME: 081215
+    MID: 000001070053864     TID: 95024685
+    ECR REF:            170120250503081154
+
+                   PURCHASE
+
+             Transaction Cancelled
+
+    DECLINED                           -22
+    CARD NUMBER:          ************1111
+    OTHER                             ****
+    RRN:
+
+
+    TOTAL:                      HKD $ 1.00
+
+
+            **** MERCHANT COPY ****
+  </MerchantReceipt>
+  <CustomerReceipt>
+    DATE: 250503              TIME: 081215
+    MID: 000001070053864     TID: 95024685
+    ECR REF:            170120250503081154
+
+                   PURCHASE
+
+             Transaction Cancelled
+
+    DECLINED                           -22
+    CARD NUMBER:          ************1111
+    OTHER                             ****
+    RRN:
+
+
+    TOTAL:                      HKD $ 1.00
+
+
+            **** CUSTOMER COPY ****
+  </CustomerReceipt>
+</EFTResponse>

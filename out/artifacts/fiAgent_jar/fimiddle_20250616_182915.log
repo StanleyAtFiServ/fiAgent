@@ -1,0 +1,34 @@
+Jun 16, 2025 6:29:15 PM org.fiserv.AppLogger rotateLogFile
+INFO: Log file rotated to: fimiddle_20250616_182915.log
+Jun 16, 2025 6:29:30 PM org.fiserv.TcpForwarderPerm start
+INFO: Listening for connections on port 30186
+Jun 16, 2025 6:29:35 PM org.fiserv.TcpForwarderPerm start
+INFO: Target address localhost
+Jun 16, 2025 6:29:49 PM org.fiserv.TcpForwarderPerm start
+INFO: Target port 9141
+Jun 16, 2025 6:29:49 PM org.fiserv.TcpForwarderPerm establishTargetConnection
+INFO: Permanent connection established to target localhost:9141
+Jun 16, 2025 6:32:29 PM org.fiserv.TcpForwarderPerm start
+INFO: Accepted connection from /0:0:0:0:0:0:0:1:56295
+Jun 16, 2025 6:32:29 PM org.fiserv.TcpForwarderPerm forwardData
+INFO: Sent acknowledgment to source
+Jun 16, 2025 6:32:29 PM org.fiserv.TcpForwarderPerm forwardData
+INFO: Forwarded 69 bytes from 30186 to 9141
+Jun 16, 2025 6:32:34 PM org.fiserv.TcpForwarderPerm backwardData
+INFO: Sent 'Retry' message: [B@4936e6b6
+Jun 16, 2025 6:32:39 PM org.fiserv.TcpForwarderPerm backwardData
+INFO: Sent 'Retry' message: [B@c3461f4
+Jun 16, 2025 6:32:44 PM org.fiserv.TcpForwarderPerm backwardData
+WARNING: Maximum retry limit reached, stopping retry.
+Jun 16, 2025 6:32:44 PM org.fiserv.TcpForwarderPerm start
+INFO: Accepted connection from /0:0:0:0:0:0:0:1:56299
+Jun 16, 2025 6:32:44 PM org.fiserv.TcpForwarderPerm forwardData
+INFO: Sent acknowledgment to source
+Jun 16, 2025 6:32:44 PM org.fiserv.TcpForwarderPerm forwardData
+INFO: Forwarded 69 bytes from 30186 to 9141
+Jun 16, 2025 6:32:44 PM org.fiserv.TcpForwarderPerm forwardData
+SEVERE: Forwarding error: Software caused connection abort: recv failed
+Jun 16, 2025 6:32:49 PM org.fiserv.TcpForwarderPerm backwardData
+INFO: Sent 'Retry' message: [B@1d0a037e
+Jun 16, 2025 6:32:49 PM org.fiserv.TcpForwarderPerm backwardData
+SEVERE: Backwarded error: Socket is closed
