@@ -2,7 +2,7 @@ package org.fiserv;
 
 public class Retrieval {
 
-    private final static String DATA_RETRIEVAL = "<EFTRequest><RequestType>0003</RequestType><TransactionType>Retrieval</TransactionType><Amount></Amount><MerchantRef></MerchantRef><Currency>1</Currency><OriginalTxnType>0</OrginalTxnType></EFTRequest>";
+    private final static String DATA_RETRIEVAL = "<EFTRequest><RequestType>0003</RequestType><TransactionType>Retrieval</TransactionType><Amount></Amount><MerchantRef></MerchantRef><Currency>1</Currency><OriginalTxnType>0</OriginalTxnType></EFTRequest>";
     private String currency;
     private String merchanRef;
     private String amount;

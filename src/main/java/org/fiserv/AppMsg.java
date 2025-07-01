@@ -19,6 +19,7 @@ public class AppMsg {
     private int msgType;
     private char opType;
     private String orgMessage;
+    private byte[] storeMessage;
 
     private String rtvMessage;
     public AppMsg( int _msgType, char _opType, String _orgMessage )
@@ -33,6 +34,19 @@ public class AppMsg {
         msgType = _msgType;
         opType = _opType;
     }
+
+    public AppMsg(){}
+
+    public void saveMsg (byte[] _svMsg)
+    {
+        storeMessage = _svMsg;
+    }
+
+    public byte[] getMsg()
+    {
+        return storeMessage;
+    }
+
     public String packMessage()
     {
         String msgOut=null;

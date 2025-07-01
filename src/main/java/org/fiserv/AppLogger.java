@@ -115,4 +115,5 @@ public class AppLogger {
         // Log rotation event
         Logger.getGlobal().info("Log file rotated to: " + logFileName);
     }
+
 }

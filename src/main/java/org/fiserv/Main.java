@@ -35,7 +35,7 @@ public class Main {
                     System.out.println("TCP Relay");
 //                    TcpForwarderPerm tcpForwarder = new TcpForwarderPerm(localPort, targetAddr, targetPort );
 //                    tcpForwarder.start();
-                    TcpRelay tcpRelay = new TcpRelay(localPort, targetAddr, targetPort );
+                    TcpRouter tcpRelay = new TcpRouter(localPort, targetAddr, targetPort );
                     tcpRelay.start();
                     break;
                 case 0:

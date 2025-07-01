@@ -8,10 +8,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.Scanner;
-import java.util.logging.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class TcpRelay {
+public class TcpRouter {
 
     //   public final static String APP_ACK = "<EFTAcknowledgement><AcknowledgementType>0003</AcknowledgementType></EFTAcknowledgement>";
     private final ExecutorService executor;
@@ -19,12 +19,6 @@ public class TcpRelay {
     //   private static final String LISTEN_HOST = "localhost";
     private int listenPort=0;
     private int targetPort=0;
-
-    private byte[] recvBufferEcr = new byte[19200];
-    private byte[] sendBufferEcr = new byte[19200];
-    private byte[] recvBufferTerm = new byte[19200];
-    private byte[] sendBufferTerm = new byte[19200];
-
     String targetAddr;
     private static Logger logger = AppLogger.getLogger(TcpForwarderOnDm.class);
     private final int WAIT_TERM_1ST_TO = 15000;
@@ -32,16 +26,13 @@ public class TcpRelay {
 
     private String stringMsgAck;
     private int appMsgAckLen;
-    public TcpRelay(String _listenPort, String _targetAddr, String _targetPort)
+    private AppMsg storeAppMsg;
+    public TcpRouter(String _listenPort, String _targetAddr, String _targetPort)
     {
         listenPort = Integer.parseInt(_listenPort);
         targetAddr = _targetAddr;
         targetPort = Integer.parseInt(_targetPort);
-        // Prepare the acknowledge message for using later
-        AppMsg appMsgAck = new AppMsg(AppMsg.MSG_ACK, AppMsg.OP_ACK, AppMsg.DATA_ACKNOWLEDGE );
-        stringMsgAck = appMsgAck.packMessage();
-        appMsgAckLen = stringMsgAck.length();
-
+        storeAppMsg = new AppMsg();
         this.executor = Executors.newCachedThreadPool();
         this.running = true;
     }
@@ -55,7 +46,6 @@ public class TcpRelay {
             logger.info("Listening for connections on port " + listenPort);
             System.out.println("Target for connections IP " + targetAddr + "and Port " + targetPort);
             logger.info("Target for connections IP " + targetAddr + "and Port " + targetPort);
-
 
             while (running) {
                 try {
@@ -81,6 +71,7 @@ public class TcpRelay {
             System.err.println("Failed to start server: " + e.getMessage());
             logger.log(Level.SEVERE, "Failed to start server: " + e.getMessage());
         } finally {
+            ConsoleLogger("Executor shutdown");
             executor.shutdown();
         }
     }
@@ -90,7 +81,8 @@ public class TcpRelay {
         executor.shutdownNow();
     }
 
-    private void relayECRnTerm(final Socket _listenEcrSocket, String _targetAddr, int _targetPort) {
+    private void relayECRnTerm(final Socket _listenEcrSocket, String _targetAddr, int _targetPort)
+    {
         try {
             InetAddress iAddrListen = InetAddress.getByName(_targetAddr);
             final Socket targetTermSocket = new Socket(iAddrListen, _targetPort); // Connect to Target
@@ -100,15 +92,18 @@ public class TcpRelay {
             synchronized (this) {
                 notify();
             }
-
+            /*
             executor.submit(new Runnable() {
                 @Override
                 public void run() {
                     ecr2Term(_listenEcrSocket, targetTermSocket);                // Read from ECR and forward to A920
                 }
             });
-            term2Ecr(targetTermSocket, _listenEcrSocket, 0, 2, WAIT_TERM_1ST_TO);          // Read from A920 and backward to ECR with timeout
-
+             */
+            ecr2Term(_listenEcrSocket, targetTermSocket);
+            term2Ecr(targetTermSocket, _listenEcrSocket, 0, 3, WAIT_TERM_1ST_TO);          // Read from A920 and backward to ECR with timeout
+            ConsoleLogger("waiting for last ACK from ECR!!!!");
+            ackWaitFromReceiver(_listenEcrSocket);
         } catch (IOException e) {
             System.err.println("Error handling client: " + e.getMessage());
             logger.log(Level.SEVERE, "Error handling client: " + e.getMessage());
@@ -116,62 +111,62 @@ public class TcpRelay {
         }
     }
 
-    private void ecr2Term(Socket source, Socket destination) {
+    private void ecr2Term(Socket sckSrcEcr, Socket sckDesTerm) {
+
+        byte[] bytesForRecvEcr = new byte[19200];
+        byte[] bytesForSendTerm;
 
         try {
-            InputStream in = source.getInputStream();
-            OutputStream out = destination.getOutputStream();
+            InputStream in = sckSrcEcr.getInputStream();
+            OutputStream out = sckDesTerm.getOutputStream();
 
             int bytesRead;
             int bytesSent;
 
-            while ((bytesRead = in.read(recvBufferEcr)) != -1 && running) {
-                // Send "acknowledge" back to source before forwarding data
+            while ((bytesRead = in.read(bytesForRecvEcr)) != -1 && running) {   // 1. Wait for data
                 try {
-                    OutputStream sourceOut = source.getOutputStream();
-                    AppMsg appMsgAck = new AppMsg(AppMsg.MSG_ACK, AppMsg.OP_ACK, AppMsg.DATA_ACKNOWLEDGE);
-                    byte[] ackBytes = appMsgAck.packMessage().getBytes(StandardCharsets.UTF_8);
-                    sourceOut.write(ackBytes);
-                    sourceOut.flush();
-                    System.out.println("Sent acknowledgment to source");
-                    logger.info("Sent acknowledgment to source");
+                    ConsoleLogger("****RECV-ECR*****");
+                    ackBackSender(sckSrcEcr);       // 2. Send "acknowledge" back to source before forwarding data
                 } catch (IOException ackError) {
                     System.err.println("Failed to send acknowledgment: " + ackError.getMessage());
                     logger.log(Level.SEVERE, "Failed to send acknowledgment", ackError);
                 }
-
-                // Move readBuffer with bytesRead from ECR  to Term send Buffer with bytesSend, then write to out(putStream): destination socket.getOutputStream )
-                sendBufferTerm = Arrays.copyOf(recvBufferEcr, recvBufferEcr.length);
+                bytesForSendTerm = Arrays.copyOf(bytesForRecvEcr, bytesForRecvEcr.length); // 3. forward from ecr to term
                 bytesSent = bytesRead;
-                // Forward data to destination
-                out.write(sendBufferTerm, 0, bytesSent);
+                out.write(bytesForSendTerm, 0, bytesSent);  // Forward data to destination
                 out.flush();
-                System.out.println("Forwarded " + bytesRead + " bytes from " +
-                        source.getLocalPort() + " to " + destination.getPort());
-                logger.info("Forwarded " + bytesSent + " bytes from " +
-                        source.getLocalPort() + " to " + destination.getPort());
+                storeAppMsg.saveMsg(bytesForSendTerm);
+
+                System.out.println("Forwarded " + bytesRead + " bytes from "
+                        + sckSrcEcr.getLocalPort() + " to " + sckDesTerm.getPort());
+                logger.info("Forwarded " + bytesSent + " bytes from "
+                        + sckSrcEcr.getLocalPort() + " to " + sckDesTerm.getPort());
+
+                if ( ackWaitFromReceiver(sckDesTerm) )
+                    return;
+                else
+                    throw new IOException("Incorrect ACK message received");
+
             }
         } catch (IOException e) {
             if (running) {
                 System.err.println("Forwarding error: " + e.getMessage());
                 logger.log(Level.SEVERE, "Forwarding error: " + e.getMessage());
             }
-        } finally {
-            closeQuietly(source);
-            closeQuietly(destination);
         }
     }
 
     private void term2Ecr(Socket srcTermSocket, Socket desEcrSocket, int retryCount, int maxRetries, int timeout) {
 
+        byte[] bytesBackRecvTerm = new byte[19200];
+        byte[] bytesBackSendEcr;
+
         try {
             // Set 95-second read timeout
             srcTermSocket.setSoTimeout(timeout);
-            InputStream inEcr = desEcrSocket.getInputStream();          //@stan
             InputStream inTerm = srcTermSocket.getInputStream();
             OutputStream outEcr = desEcrSocket.getOutputStream();
             OutputStream outTerm = srcTermSocket.getOutputStream();     //@stan
-
 
             int bytesRead;
             int bytesSend;
@@ -179,56 +174,24 @@ public class TcpRelay {
 
             try {
 
-                do {                // wait to receive acknowledge back from A920
-                    bytesRead = inTerm.read(recvBufferTerm);
-                    if (bytesRead == -1)
-                        return; // EOF reached
+                while ((bytesRead = inTerm.read(bytesBackRecvTerm)) != -1 && running) {
 
-                    strReadTerm = new String(recvBufferTerm);
-                    strReadTerm = strReadTerm.substring(0, appMsgAckLen);
+                    ackBackSender(srcTermSocket);
+                    closeQuietly(srcTermSocket);
 
-                    if ( strReadTerm.compareTo(stringMsgAck) != 0 ) {   // Supposed response from Term is NOT Ack, that mean payment data
-                        // Received Term data
-                        // then ack ACKNOWLEDGE back to Term
-                        byte[] ackTermBytes = stringMsgAck.getBytes(StandardCharsets.UTF_8);       //@stan
-                        outTerm.write(ackTermBytes);   // app. ack back directly, doesn't use sendBuffer                                                           //@stan
-                        outTerm.flush();
-                        System.out.println("Relay xml ack back to Term");                                           //@stan
-                        logger.info("Relay xml ack back to Term");                                              //@stan
-
-                        // next route the Ecr data in system to Term
-                        sendBufferEcr = Arrays.copyOf(recvBufferTerm, recvBufferTerm.length );  // read the data of term has been reached system in early stage.
-                        bytesSend = bytesRead;
-                        outEcr.write(sendBufferEcr, 0, bytesSend);                // now send to ECR
-                        outEcr.flush();
-                        System.out.println("Backwarded : " + bytesRead + " bytes from " +
+                    bytesBackSendEcr = Arrays.copyOf(bytesBackRecvTerm, bytesBackRecvTerm.length);  // read the data of term has been reached system in early stage.
+                    bytesSend = bytesRead;
+                    outEcr.write(bytesBackSendEcr, 0, bytesSend);                // now send to ECR
+                    outEcr.flush();
+                    ConsoleLogger("Backwarded : " + bytesRead + " bytes from " +
                                 srcTermSocket.getLocalPort() + " to " + desEcrSocket.getPort());
-                        logger.info("Backwarded : " + bytesSend + " bytes from " +
-                                srcTermSocket.getLocalPort() + " to " + desEcrSocket.getPort());
-
-
-                        bytesRead = inEcr.read(recvBufferEcr);
-                        strReadEcr = new String(recvBufferEcr);
-                        strReadEcr = strReadEcr.substring(0, appMsgAckLen);
-
-                        if ( strReadEcr.compareTo(stringMsgAck) == 0 ) // Receive ecr acknowledge
-                        {
-                            closeQuietly(desEcrSocket);
-                        }
-
-
-                        // Continue processing if more data is available immediately  @useful?
-                        // if (inTerm.available() > 0) {
-                        //     term2Ecr(srcTermSocket, desEcrSocket, 0, maxRetries, WAIT_TERM_1ST_TO );
-                        // }
-                    }
-                } while ( strReadTerm.compareTo(stringMsgAck) == 0 );  //@????
+                }
 
             } catch (SocketTimeoutException e) {
                 if (retryCount < maxRetries) {
                     // Send "Retry" message on timeout
                     try {
-                        String orgMsg = new String(sendBufferTerm, "UTF-8");
+                        String orgMsg = new String(storeAppMsg.getMsg(), "UTF-8");   //Get stored message
                         AppMsg rtvAppMsg = new AppMsg(AppMsg.MSG_RTV, AppMsg.OP_QST, orgMsg);         //@stan
                         String message2term = rtvAppMsg.packMessage();
                         byte[] retrievalBytes  = message2term.getBytes(StandardCharsets.UTF_8);       //@stan
@@ -254,6 +217,8 @@ public class TcpRelay {
                 System.err.println("Backwarded error: " + e.getMessage());
                 logger.log(Level.SEVERE, "Backwarded error: " + e.getMessage());
             }
+        } finally {
+            closeQuietly(srcTermSocket);
         }
     }
 
@@ -272,6 +237,53 @@ public class TcpRelay {
         String ipv4Pattern = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
         return ip.matches(ipv4Pattern);
         */
+    }
+
+    private void ackBackSender(Socket socketAckBackSender) throws IOException
+    {
+        int ack2Port = socketAckBackSender.getPort();
+
+        OutputStream streamOut = socketAckBackSender.getOutputStream();
+        AppMsg appMsgAck = new AppMsg(AppMsg.MSG_ACK, AppMsg.OP_ACK, AppMsg.DATA_ACKNOWLEDGE);
+        byte[] ackBytes = appMsgAck.packMessage().getBytes(StandardCharsets.UTF_8);
+
+        streamOut.write(ackBytes);
+        streamOut.flush();
+        System.out.println("Sent acknowledgment to sender : " + ack2Port );
+        logger.info("Sent acknowledgment to source " + ack2Port);
+    }
+
+    private boolean ackWaitFromReceiver (Socket socketWaitFromRecv) throws IOException
+    {
+
+        int wait4Port = socketWaitFromRecv.getPort();
+        InputStream inAck = socketWaitFromRecv.getInputStream();
+        int bytesReadAck;
+
+        AppMsg appMsgAck = new AppMsg(AppMsg.MSG_ACK, AppMsg.OP_ACK, AppMsg.DATA_ACKNOWLEDGE);
+        String sampleMsgAck = appMsgAck.packMessage();
+        String recvMsgAck;
+        byte[] bytesMsgAck = new byte[1024];
+
+        while ((bytesReadAck = inAck.read(bytesMsgAck)) != -1 && running) {   // wait for data
+
+            recvMsgAck = new String(bytesMsgAck, "UTF-8");
+            recvMsgAck = recvMsgAck.substring(0, sampleMsgAck.length());
+
+            System.out.println("Supposed ACK Message at port " + wait4Port + " now receive is " + recvMsgAck );
+
+            if (sampleMsgAck.compareTo(recvMsgAck) == 0)
+                return true;
+            else
+                return false;
+        }
+        return false;
+    }
+
+    private void ConsoleLogger (String logMsg )
+    {
+        System.out.println(logMsg );
+        logger.info(logMsg);
     }
     private void closeQuietly(Socket socket) {
         try {

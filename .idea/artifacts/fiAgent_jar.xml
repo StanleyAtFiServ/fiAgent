@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="fiAgent:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/jar</output-path>
+    <root id="archive" name="fiAgent.jar">
+      <element id="module-output" name="fiAgent" />
+    </root>
+  </artifact>
+</component>
