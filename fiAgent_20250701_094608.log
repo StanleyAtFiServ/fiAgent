@@ -1,0 +1,42 @@
+Jul 01, 2025 9:46:08 AM org.fiserv.AppLogger rotateLogFile
+INFO: Log file rotated to: fiAgent_20250701_094608.log
+Jul 01, 2025 9:46:08 AM org.fiserv.TcpRouter start
+INFO: Listening for connections on port 8081
+Jul 01, 2025 9:46:08 AM org.fiserv.TcpRouter start
+INFO: Target for connections IP localhostand Port 9141
+Jul 01, 2025 9:46:19 AM org.fiserv.TcpRouter start
+INFO: Accepted connection from /127.0.0.1:53756
+Jul 01, 2025 9:46:19 AM org.fiserv.TcpRouter relayECRnTerm
+INFO: Connected to target port localhost:9141
+Jul 01, 2025 9:46:19 AM org.fiserv.TcpRouter ConsoleLogger
+INFO: ****RECV-ECR*****
+Jul 01, 2025 9:46:19 AM org.fiserv.TcpRouter ackBackSender
+INFO: Sent acknowledgment to source 53756
+Jul 01, 2025 9:46:19 AM org.fiserv.TcpRouter ecr2Term
+INFO: Forwarded 384 bytes from 8081 to 9141
+Jul 01, 2025 9:46:22 AM org.fiserv.TcpRouter ackBackSender
+INFO: Sent acknowledgment to source 9141
+Jul 01, 2025 9:46:22 AM org.fiserv.TcpRouter ConsoleLogger
+INFO: Backwarded : 1532 bytes from 53757 to 53756
+Jul 01, 2025 9:46:22 AM org.fiserv.TcpRouter term2Ecr
+SEVERE: Backwarded error: socket closed
+Jul 01, 2025 9:46:22 AM org.fiserv.TcpRouter ConsoleLogger
+INFO: waiting for last ACK from ECR!!!!
+Jul 01, 2025 9:54:02 AM org.fiserv.TcpRouter start
+INFO: Accepted connection from /127.0.0.1:53791
+Jul 01, 2025 9:54:02 AM org.fiserv.TcpRouter relayECRnTerm
+INFO: Connected to target port localhost:9141
+Jul 01, 2025 9:54:02 AM org.fiserv.TcpRouter ConsoleLogger
+INFO: ****RECV-ECR*****
+Jul 01, 2025 9:54:02 AM org.fiserv.TcpRouter ackBackSender
+INFO: Sent acknowledgment to source 53791
+Jul 01, 2025 9:54:02 AM org.fiserv.TcpRouter ecr2Term
+INFO: Forwarded 384 bytes from 8081 to 9141
+Jul 01, 2025 9:54:07 AM org.fiserv.TcpRouter ackBackSender
+INFO: Sent acknowledgment to source 9141
+Jul 01, 2025 9:54:07 AM org.fiserv.TcpRouter ConsoleLogger
+INFO: Backwarded : 1532 bytes from 53792 to 53791
+Jul 01, 2025 9:54:07 AM org.fiserv.TcpRouter term2Ecr
+SEVERE: Backwarded error: socket closed
+Jul 01, 2025 9:54:07 AM org.fiserv.TcpRouter ConsoleLogger
+INFO: waiting for last ACK from ECR!!!!

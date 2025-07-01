@@ -20,7 +20,7 @@ public class TcpRouter {
     private int listenPort=0;
     private int targetPort=0;
     String targetAddr;
-    private static Logger logger = AppLogger.getLogger(TcpForwarderOnDm.class);
+    private static Logger logger = AppLogger.getLogger(TcpRouter.class);
     private final int WAIT_TERM_1ST_TO = 15000;
     private final int WAIT_TERM_RTV_TO = 5000;
 
